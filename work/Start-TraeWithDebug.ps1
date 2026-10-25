@@ -4,10 +4,10 @@
 #   .\Start-TrapeWithDebug.ps1 -ForceRestart # restart Trae with debug port (closes running instance)
 param(
     [switch]$ForceRestart,
-    [int]$Port = 9222
+    [int]$Port = $(if ($env:TRAE_CDP_PORT) { [int]$env:TRAE_CDP_PORT } else { 9222 })
 )
 
-$TraeExe = "D:\Applications\Trae\Trae CN.exe"
+$TraeExe = if ($env:TRAE_EXE) { $env:TRAE_EXE } else { "D:\Applications\Trae\Trae CN.exe" }
 
 function Test-CdpPort {
     try {

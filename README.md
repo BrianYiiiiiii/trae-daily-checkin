@@ -27,6 +27,15 @@
 2. 命中即复用；未命中才下载，并登记回台账
 3. 项目自身声明写在 `deps.json`
 
+### 环境变量（可选，用于覆盖默认路径）
+
+| 变量 | 默认值 | 用途 |
+|---|---|---|
+| `TRAE_EXE` | `D:\Applications\Trae\Trae CN.exe` | Trae 可执行文件路径（脚本自动启动 Trae 时使用） |
+| `TRAE_CDP_PORT` | `9222` | CDP 调试端口（脚本与 `work\Start-TraeWithDebug.ps1` 共用） |
+
+PowerShell 临时设置：`$env:TRAE_EXE = "C:\path\to\Trae CN.exe"`；持久设置用 `setx TRAE_EXE "..."`（新开终端生效）。
+
 ### 启动步骤
 
 ```powershell
@@ -108,6 +117,15 @@ Dependencies are taken from the shared workspace dependency pool. **Do not creat
 1. Check the ledger first: `D:\workspace\20_ASSETS\DEP_INDEX.md`
 2. If it is already there, reuse it; only download when missing, then register it back in the ledger
 3. Declare this project's own dependencies in `deps.json`
+
+### Environment Variables (optional, to override the defaults)
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `TRAE_EXE` | `D:\Applications\Trae\Trae CN.exe` | Path to the Trae executable (used when the script auto-starts Trae) |
+| `TRAE_CDP_PORT` | `9222` | CDP debug port (shared by the script and `work\Start-TraeWithDebug.ps1`) |
+
+Temporary override in PowerShell: `$env:TRAE_EXE = "C:\path\to\Trae CN.exe"`. For a persistent setting use `setx TRAE_EXE "..."` (takes effect in new terminals).
 
 ### Startup Steps
 

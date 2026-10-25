@@ -16,8 +16,8 @@ import requests
 import websocket
 from windows_toasts import Toast, ToastAudio, WindowsToaster
 
-PORT = 9222
-TRAE_EXE = r"D:\Applications\Trae\Trae CN.exe"
+PORT = int(os.environ.get("TRAE_CDP_PORT", "9222"))
+TRAE_EXE = os.environ.get("TRAE_EXE", r"D:\Applications\Trae\Trae CN.exe")
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
 LOG_FILE = os.path.join(ROOT_DIR, "logs", "checkin.log")
