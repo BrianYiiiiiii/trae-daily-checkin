@@ -1,0 +1,15 @@
+# 个人隐私与运行产物（工作区规则：不打包不迁移）
+data/
+logs/
+outputs/
+docs/
+.screenshots/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# 系统
+Thumbs.db
+desktop.ini

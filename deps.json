@@ -1,0 +1,29 @@
+{
+  "project": "23-2026-10-25_trae-daily-checkin",
+  "updated": "2026-10-25",
+  "dependencies": [
+    {
+      "name": "requests",
+      "version": "2.31.0",
+      "type": "python-package",
+      "path": "D:\\Python311\\Lib\\site-packages"
+    },
+    {
+      "name": "websocket-client",
+      "version": "1.9.0",
+      "type": "python-package",
+      "path": "D:\\Python311\\Lib\\site-packages"
+    },
+    {
+      "name": "windows-toasts",
+      "version": "1.3.1",
+      "type": "python-package",
+      "path": "D:\\Python311\\Lib\\site-packages",
+      "note": "发 Windows 系统通知气泡（静音）。2026-10-26 pip 新增,已登记 DEP_INDEX 维护记录"
+    }
+  ],
+  "_comment": [
+    "本文件只【声明】依赖，不复制实体。依赖实体放工作区依赖池。",
+    "以上两项为系统 Python 预装包，本项目未下载、未登记进 DEP_INDEX（非新增依赖）。"
+  ]
+}
