@@ -7,7 +7,33 @@ param(
     [int]$Port = $(if ($env:TRAE_CDP_PORT) { [int]$env:TRAE_CDP_PORT } else { 9222 })
 )
 
-$TraeExe = if ($env:TRAE_EXE) { $env:TRAE_EXE } else { "D:\Applications\Trae\Trae CN.exe" }
+# 自动探测 Trae 安装路径：环境变量 > PATH > 常见安装位置
+function Resolve-TraeExe {
+    if ($env:TRAE_EXE -and (Test-Path $env:TRAE_EXE)) { return $env:TRAE_EXE }
+    # PATH 里找
+    $fromPath = Get-Command "Trae CN.exe" -ErrorAction SilentlyContinue
+    if ($fromPath) { return $fromPath.Source }
+    # 常见安装位置
+    $candidates = @(
+        "$env:LOCALAPPDATA\Programs\Trae\Trae CN.exe",
+        "$env:LOCALAPPDATA\Trae\Trae CN.exe",
+        "D:\Applications\Trae\Trae CN.exe",
+        "C:\Applications\Trae\Trae CN.exe",
+        "C:\Program Files\Trae\Trae CN.exe",
+        "C:\Program Files (x86)\Trae\Trae CN.exe"
+    )
+    foreach ($c in $candidates) {
+        if (Test-Path $c) { return $c }
+    }
+    return $null
+}
+
+$TraeExe = Resolve-TraeExe
+if (-not $TraeExe) {
+    Write-Output "TRAE_NOT_FOUND"
+    Write-Output "请设置环境变量 TRAE_EXE 指向 Trae CN.exe 的完整路径"
+    exit 3
+}
 
 function Test-CdpPort {
     try {

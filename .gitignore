@@ -13,3 +13,6 @@ __pycache__/
 # 系统
 Thumbs.db
 desktop.ini
+
+# Release artifacts（zip 由 GitHub Release 上传，不进 git）
+release/*.zip
