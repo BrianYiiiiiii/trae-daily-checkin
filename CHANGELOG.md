@@ -25,6 +25,8 @@
 
 ### Fixed
 
+- 2026-10-27：修复计划任务解锁触发时闪黑色控制台窗口。原因：pythonw（无控制台）subprocess 调用 tasklist（控制台程序）时 Windows 会分配新控制台；`--wait 15` 模式下每 20 秒轮询一次就闪一次。修复：subprocess 调用加 `CREATE_NO_WINDOW`。release 技能包同步更新
+
 - 触发条点击原来取外层容器中心点，窗口尺寸变化会点空；改为点击按钮自身 `button[class*="accountTrigger"]`
 
 ### Added（2026-10-26 追记）
