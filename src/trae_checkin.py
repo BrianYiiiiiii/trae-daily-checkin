@@ -18,6 +18,9 @@ from windows_toasts import Toast, ToastAudio, WindowsToaster
 
 PORT = int(os.environ.get("TRAE_CDP_PORT", "9222"))
 TRAE_EXE = os.environ.get("TRAE_EXE", r"D:\Applications\Trae\Trae CN.exe")
+# 计划任务用 pythonw（无控制台）运行；调用 tasklist 等控制台程序时必须加
+# CREATE_NO_WINDOW，否则 Windows 会为其分配新控制台 → 屏幕闪黑框。
+CREATE_NO_WINDOW = 0x08000000
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
 LOG_FILE = os.path.join(ROOT_DIR, "logs", "checkin.log")
@@ -162,7 +165,7 @@ def ensure_cdp(auto_start=True):
         return False, "cdp_unavailable"
     # Use tasklist (not powershell.exe) per workspace rule: never invoke PS 5.1.
     proc = subprocess.run(["tasklist", "/FI", "IMAGENAME eq Trae CN.exe", "/NH"],
-                          capture_output=True, text=True)
+                          capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
     if "Trae CN.exe" in proc.stdout:
         return False, "running_without_cdp"
     subprocess.Popen([TRAE_EXE, f"--remote-debugging-port={PORT}"],
@@ -348,7 +351,7 @@ def emit(line):
 
 def trae_process_running():
     proc = subprocess.run(["tasklist", "/FI", "IMAGENAME eq Trae CN.exe", "/NH"],
-                          capture_output=True, text=True)
+                          capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
     return "Trae CN.exe" in proc.stdout
 
 
