@@ -267,6 +267,62 @@ def parse_num(text):
         return None
 
 
+# 通过 Trae 内部 RPC（__SOLO_LITE_PORT_REGISTRY__ 的 CheckinCreditsPort）直接领取，
+# 不走任何 UI。claim() 幂等：当天重复调用无副作用，返回 undefined。
+API_CLAIM_JS = r"""
+(async () => {
+  const reg = window.__SOLO_LITE_PORT_REGISTRY__;
+  if (!reg || !reg.instances) return JSON.stringify({ok: false, why: "no_registry"});
+  let inst = null;
+  for (const [k, v] of reg.instances) {
+    if (/checkin/i.test(String(k))) { inst = v; break; }
+  }
+  if (!inst || typeof inst.claim !== "function")
+    return JSON.stringify({ok: false, why: "no_port"});
+  try {
+    await inst.claim();
+    return JSON.stringify({ok: true});
+  } catch (e) {
+    return JSON.stringify({ok: false, why: "claim_throw", detail: String(e).slice(0, 200)});
+  }
+})()
+"""
+
+
+def api_claim():
+    """零界面领取：调 CheckinCreditsPort.claim()。返回 True=已调用成功。"""
+    for t in solo_targets():
+        cdp = None
+        try:
+            cdp = Cdp(t["webSocketDebuggerUrl"])
+            cdp.mid += 1
+            cdp.ws.send(json.dumps({"id": cdp.mid, "method": "Runtime.evaluate",
+                                    "params": {"expression": API_CLAIM_JS,
+                                               "returnByValue": True, "awaitPromise": True}}))
+            cdp.ws.settimeout(20)
+            while True:
+                msg = json.loads(cdp.ws.recv())
+                if msg.get("id") == cdp.mid:
+                    r = json.loads(msg["result"]["result"].get("value") or "{}")
+                    return r.get("ok") is True
+        except Exception:
+            continue
+        finally:
+            if cdp:
+                try:
+                    cdp.close()
+                except Exception:
+                    pass
+    return False
+
+
+def today_checked():
+    """今天的 history 记录已存在且 checked=true（当日首次 UI 流程已跑过）。"""
+    today = date.today().isoformat()
+    rec = next((e for e in load_history() if e.get("date") == today), None)
+    return bool(rec and rec.get("checked"))
+
+
 def load_history():
     try:
         with open(HISTORY_FILE, encoding="utf-8") as f:
@@ -422,6 +478,15 @@ def main():
 
     if how == "started":
         time.sleep(15)  # 冷启动后等界面渲染
+
+    # 混合模式：当天已有记录（首次 UI 流程已跑过）→ 走零界面 API 领取；
+    # API 失败（Trae 改版等）自动退回 UI 流程。
+    if today_checked():
+        if api_claim():
+            emit(json.dumps({"status": "already", "how": "api_claim"}, ensure_ascii=False))
+            return
+        log("api_claim failed, fallback to UI flow")
+
     result = do_checkin()
     result["how"] = how
     emit(json.dumps(result, ensure_ascii=False))
