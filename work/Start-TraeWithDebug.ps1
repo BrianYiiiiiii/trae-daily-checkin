@@ -36,8 +36,9 @@ if (-not $TraeExe) {
 }
 
 function Test-CdpPort {
+    # 用 127.0.0.1 而非 localhost：pwsh 7 可能把 localhost 解析到 ::1，而 Trae 只监听 IPv4
     try {
-        $r = Invoke-WebRequest -Uri "http://localhost:$Port/json/version" -UseBasicParsing -TimeoutSec 2
+        $r = Invoke-WebRequest -Uri "http://127.0.0.1:$Port/json/version" -UseBasicParsing -TimeoutSec 5
         return $r.StatusCode -eq 200
     } catch {
         return $false
@@ -45,8 +46,10 @@ function Test-CdpPort {
 }
 
 # Trae 就绪后后台触发一次签到（pythonw 无窗口；脚本自身幂等：当天已签只走零界面 api_claim）
+# 注意：函数内 $MyInvocation.ScriptName 不可靠，用脚本级变量 $ScriptRoot
+$ScriptRoot = $PSScriptRoot
 function Send-Checkin {
-    $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.ScriptName)
+    $root = Split-Path -Parent $ScriptRoot
     $script = Join-Path $root "src\trae_checkin.py"
     if (Test-Path $script) {
         $py = "D:\Python311\pythonw.exe"
@@ -91,8 +94,8 @@ if ($running -and $ForceRestart) {
 
 Start-Process -FilePath $TraeExe -ArgumentList "--remote-debugging-port=$Port"
 
-# Wait for CDP to come up (app boot can take a while)
-$deadline = (Get-Date).AddSeconds(60)
+# Wait for CDP to come up (app boot can take a while; 实测冷启动最慢约 2.5 分钟)
+$deadline = (Get-Date).AddSeconds(240)
 while ((Get-Date) -lt $deadline) {
     Start-Sleep -Seconds 2
     if (Test-CdpPort) {
