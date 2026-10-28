@@ -44,14 +44,42 @@ function Test-CdpPort {
     }
 }
 
+# Trae 就绪后后台触发一次签到（pythonw 无窗口；脚本自身幂等：当天已签只走零界面 api_claim）
+function Send-Checkin {
+    $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.ScriptName)
+    $script = Join-Path $root "src\trae_checkin.py"
+    if (Test-Path $script) {
+        $py = "D:\Python311\pythonw.exe"
+        if (-not (Test-Path $py)) { $py = "pythonw.exe" }
+        Start-Process -FilePath $py -ArgumentList @($script, "--no-auto-start", "--wait", "5") -WindowStyle Hidden
+    }
+}
+
 $running = Get-Process -Name "Trae CN" -ErrorAction SilentlyContinue
 
+# 已运行时把窗口带到前台（用户点图标的预期行为）；仅窗口激活，不涉及任何输入模拟
+function Show-TraeWindow {
+    Add-Type -Namespace W -Name Win32Show -MemberDefinition @"
+        [System.Runtime.InteropServices.DllImport("user32.dll")] public static extern bool ShowWindow(System.IntPtr h, int c);
+        [System.Runtime.InteropServices.DllImport("user32.dll")] public static extern bool SetForegroundWindow(System.IntPtr h);
+"@
+    $p = Get-Process -Name "Trae CN" -ErrorAction SilentlyContinue |
+         Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+    if ($p) {
+        [W.Win32Show]::ShowWindow($p.MainWindowHandle, 9) | Out-Null   # SW_RESTORE
+        [W.Win32Show]::SetForegroundWindow($p.MainWindowHandle) | Out-Null
+    }
+}
+
 if (Test-CdpPort) {
+    Show-TraeWindow
+    Send-Checkin
     Write-Output "CDP_READY"
     exit 0
 }
 
 if ($running -and -not $ForceRestart) {
+    Show-TraeWindow
     Write-Output "RUNNING_WITHOUT_CDP"
     exit 1
 }
@@ -68,6 +96,7 @@ $deadline = (Get-Date).AddSeconds(60)
 while ((Get-Date) -lt $deadline) {
     Start-Sleep -Seconds 2
     if (Test-CdpPort) {
+        Send-Checkin
         Write-Output "CDP_READY"
         exit 0
     }

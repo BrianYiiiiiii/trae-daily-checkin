@@ -17,6 +17,8 @@
 
 ### Changed
 
+- 2026-10-29：新增「开启 Trae 即自动领取」。`work\Start-TraeWithDebug.ps1` 在 CDP 就绪后后台触发一次签到（pythonw 无窗口，`--wait 5`）；桌面 + 开始菜单快捷方式改指启动器（pwsh 隐藏窗口，图标保留 Trae 原图标）。启动器在 Trae 已运行时会把窗口带到前台（仅窗口激活，无输入模拟）；已运行但无调试端口时只提示不重启。配合混合模式：当天首签走 UI 拿完整数据，重复触发走 `CheckinCreditsPort.claim()` 零界面幂等领取
+- 2026-10-27：混合领取模式。当天首次触发走 UI 流程（完整数据 + 双路提示 + 日报）；当天后续触发调 Trae 内部 RPC `__SOLO_LITE_PORT_REGISTRY__` 的 `CheckinCreditsPort.claim()`，零界面；API 失效自动退回 UI 流程
 - 签到成功后自动收起自己打开的面板（用户手动打开的不动）
 - 数据与日志从 C 盘迁到本项目 `data\`、`logs\`；C 盘只保留技能入口 `SKILL.md` 指针
 - 计划任务、技能文档、脚本常量全部改指 D 盘路径
